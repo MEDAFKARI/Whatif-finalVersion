@@ -64,6 +64,10 @@ public class SshCommandExecutor {
         }
         System.out.println("Full script output:\n" + outputBuffer);
 
+
+        System.out.println("This from sshCommand Executore to check the file name : " + fileName);
+
+
         channelExec.disconnect();
         session.disconnect();
 
@@ -72,6 +76,57 @@ public class SshCommandExecutor {
 
     }
 
+
+    public void moveFile(String fileName) throws JSchException, IOException {
+        JSch jSch = new JSch();
+        Session session = jSch.getSession(username,host,port);
+        session.setPassword(password);
+
+        Properties config = new Properties();
+
+        config.put("StrictHostKeyChecking", "no");
+        session.setConfig(config);
+
+        session.connect();
+
+        ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+
+        channelExec.setCommand("mv /root/input/" + fileName + " "+"/root/input/Archive/"+fileName);
+        channelExec.setErrStream(System.err);
+        InputStream in = channelExec.getInputStream();
+        channelExec.connect();
+
+
+        byte[] tmp = new byte[1024];
+
+        StringBuilder outputBuffer = new StringBuilder();
+        while (true) {
+            while (in.available() > 0) {
+                int i = in.read(tmp, 0, 1024);
+                if (i < 0) break;
+                String output = new String(tmp, 0, i);
+                System.out.print(output);
+                outputBuffer.append(output);
+            }
+            if (channelExec.isClosed()) {
+                if (in.available() > 0) continue;
+                System.out.println("Exit status: " + channelExec.getExitStatus());
+                break;
+            }
+        }
+        System.out.println("Full script output:\n" + outputBuffer);
+
+
+        System.out.println("This from sshCommand Executore to check the file name : " + fileName);
+
+
+        channelExec.disconnect();
+        session.disconnect();
+
+
+
+
+    }
 
 
 }

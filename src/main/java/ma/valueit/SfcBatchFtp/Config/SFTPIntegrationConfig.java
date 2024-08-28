@@ -196,7 +196,7 @@ public class SFTPIntegrationConfig {
         SftpInboundFileSynchronizingMessageSource source = new SftpInboundFileSynchronizingMessageSource(sftpInboundFileSynchronizer());
         source.setLocalDirectory(new File("output/"));
         source.setAutoCreateLocalDirectory(true);
-        source.setLocalFilter(new AcceptOnceFileListFilter<>());
+        source.setLocalFilter(null);
 
         return source;
     }
@@ -206,6 +206,7 @@ public class SFTPIntegrationConfig {
         return IntegrationFlow.from(sftpMessageSource(),
                         c -> c.poller(p -> p.fixedDelay(1000)))
                 .handle(message -> {
+                    System.out.println("------------SFTP INBOUND FLOW BEFORE PROCESSING---------");
                     File file = (File) message.getPayload();
 
                     System.out.println("Processing file: " + file.getName());

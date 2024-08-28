@@ -22,6 +22,10 @@ public class IntegrationService {
     @Qualifier("outboundChannel")
     private MessageChannel outboundChannel;
 
+    @Autowired
+    @Qualifier("archiveOutboundChannel")
+    private MessageChannel archiveOutboundChannel;
+
 //    @Autowired
 //    @Qualifier("inboundChannel")
 //    private PollableChannel inboundChannel;
@@ -44,6 +48,13 @@ public class IntegrationService {
             System.out.println(file.getName());
             if (file.exists()){
                 file.delete();
+                try {
+                    sshCommandExecutor.moveFile(file.getName());
+                } catch (JSchException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
         } else {
