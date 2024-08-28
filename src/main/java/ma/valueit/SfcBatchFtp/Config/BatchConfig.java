@@ -16,6 +16,8 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.file.MultiResourceItemWriter;
+import org.springframework.batch.item.file.builder.MultiResourceItemWriterBuilder;
 import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,13 +48,31 @@ public class BatchConfig {
     private final DataSource dataSource;
 
 
+//    @Bean
+//    public MultiResourceItemWriter<InputEntity> multiResourceItemWriter() throws IOException {
+//        return new MultiResourceItemWriterBuilder<InputEntity>()
+//                .name("multiResourceItemWriter")
+//                .resource(new FileSystemResource("output/data"))
+//                .itemCountLimitPerResource(2)
+//                .delegate(xmlItemWriter(null))
+//                .build();
+//    }
+
+
+
     @Bean
     public JdbcCursorItemReader<InputEntity> DataReader(){
         return new JdbcCursorItemReaderBuilder<InputEntity>()
                 .dataSource(dataSource)
                 .name("Data Reader")
+//                .sql("SELECT * FROM DBISIC.ICT_ENCOURS_BRUT\n" +
+//                        "WHERE TRUNC(INSERT_DATE, 'MM') = (\n" +
+//                        "    SELECT MAX(TRUNC(INSERT_DATE, 'MM'))\n" +
+//                        "    FROM DBISIC.ICT_ENCOURS_BRUT\n" +
+//                        ")")
                 .sql("Select * from ICT_ENCOURS_BRUT")
                 .rowMapper(new DataClassRowMapper<>(InputEntity.class))
+                .fetchSize(1000)
                 .build();
     }
 

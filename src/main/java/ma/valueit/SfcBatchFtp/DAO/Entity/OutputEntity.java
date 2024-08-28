@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NaturalId;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
@@ -14,15 +15,16 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(name = "Output")
-
 public class OutputEntity {
-    @Id
+
     @Column(name = "CODE_EXERCICE", length = 4)
     private String codeExercice;
+
 
     @Column(name = "CODE_PERIODE", length = 2)
     private String codePeriode;
 
+    @Id
     @Column(name = "IE_AFFAIRE", length = 12)
     private String ieAffaire;
 

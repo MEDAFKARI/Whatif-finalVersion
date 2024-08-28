@@ -16,13 +16,13 @@ import java.util.Date;
 @XmlRootElement(name = "Input")
 public class InputEntity {
 
-    @Id
     @Column(name = "CODE_EXERCICE", length = 4)
     private String codeExercice;
 
     @Column(name = "CODE_PERIODE", length = 2)
     private String codePeriode;
 
+    @Id
     @Column(name = "IE_AFFAIRE", length = 12)
     private String ieAffaire;
 
