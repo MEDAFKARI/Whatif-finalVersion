@@ -78,7 +78,7 @@ public class WritingToDbBatch {
         System.out.println("THE POINTER ON THE STEPPP -----------------------------------------");
 
         return new StepBuilder("insertToDb", jobRepository)
-                .<OutputEntity, OutputEntity>chunk(100, platformTransactionManager)
+                .<OutputEntity, OutputEntity>chunk(1000, platformTransactionManager)
                 .reader(reader(null))
                 .processor(outputProcessor())
                 .writer(outputWriter())
