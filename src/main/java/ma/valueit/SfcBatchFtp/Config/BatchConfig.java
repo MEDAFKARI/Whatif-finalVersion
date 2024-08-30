@@ -17,6 +17,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.batch.item.file.MultiResourceItemWriter;
+import org.springframework.batch.item.file.ResourceSuffixCreator;
 import org.springframework.batch.item.file.builder.MultiResourceItemWriterBuilder;
 import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -48,17 +49,6 @@ public class BatchConfig {
     private final DataSource dataSource;
 
 
-//    @Bean
-//    public MultiResourceItemWriter<InputEntity> multiResourceItemWriter() throws IOException {
-//        return new MultiResourceItemWriterBuilder<InputEntity>()
-//                .name("multiResourceItemWriter")
-//                .resource(new FileSystemResource("output/data"))
-//                .itemCountLimitPerResource(2)
-//                .delegate(xmlItemWriter(null))
-//                .build();
-//    }
-
-
 
     @Bean
     public JdbcCursorItemReader<InputEntity> DataReader(){
@@ -72,7 +62,6 @@ public class BatchConfig {
 //                        ")")
                 .sql("Select * from ICT_ENCOURS_BRUT")
                 .rowMapper(new DataClassRowMapper<>(InputEntity.class))
-                .fetchSize(1000)
                 .build();
     }
 
@@ -83,49 +72,58 @@ public class BatchConfig {
 
     @Bean
     @StepScope
-    public StaxEventItemWriter<InputEntity> xmlItemWriter(@Value("#{jobParameters['output.file.name']}") String filename) throws IOException {
-        File file = new File(filename);
-        file.getParentFile().mkdirs();
+    public MultiResourceItemWriter<InputEntity> multiXmlItemWriter(@Value("#{jobParameters['output.file.name']}") String filename) throws IOException {
+        return new MultiResourceItemWriterBuilder<InputEntity>()
+                .name("multiResourceItemWriter")
+                .resource(new FileSystemResource(filename))
+                .resourceSuffixCreator(resourceSuffixCreator())
+                .itemCountLimitPerResource(5)
+                .delegate(xmlItemWriter(filename))
+                .build();
+    }
 
-        System.out.println(file);
-
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create new file", e);
+    @Bean
+    public ResourceSuffixCreator resourceSuffixCreator() {
+        return new ResourceSuffixCreator() {
+            @Override
+            public String getSuffix(int index) {
+                return index + ".xml";
             }
-        }
+        };
+    }
 
+    @Bean
+    @StepScope
+    public StaxEventItemWriter<InputEntity> xmlItemWriter(@Value("#{jobParameters['output.file.name']}") String filename) throws IOException {
         StaxEventItemWriter<InputEntity> writer = new StaxEventItemWriter<>();
-        writer.setResource(new FileSystemResource(file));
-
+        writer.setResource(new FileSystemResource(filename));
 
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
         marshaller.setClassesToBeBound(InputEntity.class);
         writer.setMarshaller(marshaller);
-        writer.setRootTagName("StrategyOneRequest");
-        writer.setOverwriteOutput(Boolean.TRUE);
+        writer.setRootTagName("a");
+        writer.setOverwriteOutput(true);
 
         return writer;
     }
 
     @Bean
-    public Step WritingStep() throws IOException {
-        return new StepBuilder("Xml File Writer Step", jobRepository)
-                .<InputEntity, InputEntity>chunk(10, platformTransactionManager)
+    public Step writingStep() throws IOException {
+        return new StepBuilder("XmlFileWriterStep", jobRepository)
+                .<InputEntity, InputEntity>chunk(5, platformTransactionManager)
                 .reader(DataReader())
                 .processor(processor())
-                .writer(xmlItemWriter(null))
+                .writer(multiXmlItemWriter(null))
                 .build();
     }
+
 
     @Bean
     @Qualifier("XmlJob")
     public Job dbToXml() throws IOException {
         return new JobBuilder("XmlJob",jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .start(WritingStep())
+                .start(writingStep())
                 .build();
     }
 

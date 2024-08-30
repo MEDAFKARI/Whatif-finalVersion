@@ -13,7 +13,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "Input")
+@XmlRootElement(name = "StrategyOneRequest")
 public class InputEntity {
 
     @Column(name = "CODE_EXERCICE", length = 4)

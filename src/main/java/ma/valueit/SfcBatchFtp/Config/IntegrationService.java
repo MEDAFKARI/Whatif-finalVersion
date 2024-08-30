@@ -46,10 +46,11 @@ public class IntegrationService {
         if (fileSent) {
             System.out.println("File Sent!");
             System.out.println(file.getName());
+
             if (file.exists()){
-                file.delete();
                 try {
-                    sshCommandExecutor.moveFile(file.getName());
+                    System.out.println("File name from sending file service : " + file.getName());
+                    sshCommandExecutor.moveFile(file);
                 } catch (JSchException e) {
                     throw new RuntimeException(e);
                 } catch (IOException e) {

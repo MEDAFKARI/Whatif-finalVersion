@@ -1,8 +1,10 @@
 package ma.valueit.SfcBatchFtp.Config;
 
 import lombok.RequiredArgsConstructor;
+import ma.valueit.SfcBatchFtp.Service.FileService;
 import ma.valueit.SfcBatchFtp.Service.FtpService;
 import ma.valueit.SfcBatchFtp.Service.GlobalNameService;
+import ma.valueit.SfcBatchFtp.Util.FileModifier;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -23,6 +25,9 @@ import java.util.Date;
 
 @Component
 public class SchedulerConfig {
+
+    @Autowired
+    private FileModifier fileModifier;
     @Autowired
     private IntegrationService integrationService;
     @Autowired
@@ -32,31 +37,40 @@ public class SchedulerConfig {
     private Job job;
     @Autowired
     private GlobalNameService globalNameService;
+    @Autowired
+    private FileService fileService;
 
     @Scheduled(cron = "${ScheduleCron}")
     public void importWithSchedule() {
-        String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        var fileName = timestamp.concat("_Input.xml");
+        var fileName = "Input";
         System.out.println("Importe Done !!!!!");
         JobParameters jobParameters = new JobParametersBuilder()
                 .addLong("startAt", System.currentTimeMillis())
                 .addString("output.file.name", "output/"+fileName)
                 .toJobParameters();
 
-        globalNameService.setFile_Name(fileName);
-
         try {
             var jobExecution = jobLauncher.run(job, jobParameters);
+
             if (!jobExecution.getStatus().isUnsuccessful()) {
-                System.out.println(jobExecution.getStatus());
-                File file = new File(jobParameters.getString("output.file.name"));
-                System.out.println("From the Scheduler : " + file);
-                integrationService.sendFile(file);
-                System.out.println("This from Scheduler :"+globalNameService.getFile_Name());
+                System.out.println("Job Status: " + jobExecution.getStatus());
+
+                System.out.println("Calling fileService.loadAll()");
+
+                fileService.loadAll().forEach(path -> {
+                    File file = new File("output/"+path);
+                    System.out.println("From the Scheduler: " + file);
+
+                    try {
+                        fileModifier.modifyFile(file.getPath());
+                    } catch (Exception e) {
+                        System.err.println("Error sending file: " + file.getName() + ", " + e.getMessage());
+                    }
+                });
+            } else {
+                System.err.println("Job execution was unsuccessful.");
             }
-
-
-        } catch (JobInstanceAlreadyCompleteException | JobExecutionAlreadyRunningException |
+        }catch (JobInstanceAlreadyCompleteException | JobExecutionAlreadyRunningException |
                  JobParametersInvalidException | JobRestartException e) {
             e.printStackTrace();
         }

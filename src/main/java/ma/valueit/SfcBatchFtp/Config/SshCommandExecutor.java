@@ -8,8 +8,11 @@ import com.jcraft.jsch.Session;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 @Service
@@ -71,13 +74,10 @@ public class SshCommandExecutor {
         channelExec.disconnect();
         session.disconnect();
 
-
-
-
     }
 
 
-    public void moveFile(String fileName) throws JSchException, IOException {
+    public void moveFile(File file) throws JSchException, IOException {
         JSch jSch = new JSch();
         Session session = jSch.getSession(username,host,port);
         session.setPassword(password);
@@ -91,7 +91,12 @@ public class SshCommandExecutor {
 
         ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
 
-        channelExec.setCommand("mv /root/input/" + fileName + " "+"/root/input/Archive/"+fileName);
+        String timestamp = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+        String newFileName = timestamp + "_Input.xml";
+
+        String command = "mv /root/input/" + file.getName() + " /root/input/Archive/" + newFileName;
+        channelExec.setCommand(command);
+
         channelExec.setErrStream(System.err);
         InputStream in = channelExec.getInputStream();
         channelExec.connect();
@@ -117,12 +122,14 @@ public class SshCommandExecutor {
         System.out.println("Full script output:\n" + outputBuffer);
 
 
-        System.out.println("This from sshCommand Executore to check the file name : " + fileName);
+        System.out.println("This from sshCommand Move File to check the file name : " + file.getName()+"_"+new Date());
 
 
         channelExec.disconnect();
         session.disconnect();
 
+
+//        file.delete();
 
 
 
