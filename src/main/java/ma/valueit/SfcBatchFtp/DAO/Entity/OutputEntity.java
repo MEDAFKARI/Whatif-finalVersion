@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.hibernate.annotations.NaturalId;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,4 +32,9 @@ public class OutputEntity {
     @Column(name = "PERIODE")
     @Temporal(TemporalType.DATE)
     private Date periode;
+
+
+    @Column(name = "EXECUTION_TIME")
+    @Temporal(TemporalType.DATE)
+    private String executionTime;
 }

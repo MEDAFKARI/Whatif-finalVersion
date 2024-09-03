@@ -250,10 +250,8 @@ public class SFTPIntegrationConfig {
 
                         try {
                             if (file.exists()) {
-                                // Run the batch job and wait for it to complete
                                 var jobExecution = jobLauncher.run(InsertingJob, jobParameters);
                                 if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-                                    // Rename and archive the file
                                     String timestamp = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
                                     File renamedFile = null;
                                     if(ForOutputFilesLastName.equals(timestamp)){

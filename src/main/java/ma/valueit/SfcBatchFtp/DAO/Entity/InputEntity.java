@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -14,7 +14,9 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(name = "StrategyOneRequest")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class InputEntity {
+
 
     @Column(name = "CODE_EXERCICE", length = 4)
     private String codeExercice;
@@ -304,5 +306,11 @@ public class InputEntity {
 
     @Column(name = "FLAG_SINISTRE")
     private String flagSinistre;
+
+
+
+
+
+
 
 }

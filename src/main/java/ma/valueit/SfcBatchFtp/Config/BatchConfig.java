@@ -1,7 +1,9 @@
 package ma.valueit.SfcBatchFtp.Config;
 
+import jakarta.xml.bind.Marshaller;
 import lombok.RequiredArgsConstructor;
 import ma.valueit.SfcBatchFtp.DAO.Entity.InputEntity;
+import ma.valueit.SfcBatchFtp.DAO.Entity.StrategyOneRequest;
 import ma.valueit.SfcBatchFtp.Service.FtpService;
 import ma.valueit.SfcBatchFtp.Service.GlobalNameService;
 import org.apache.commons.net.ftp.FTPClient;
@@ -13,12 +15,14 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.batch.item.file.MultiResourceItemWriter;
 import org.springframework.batch.item.file.ResourceSuffixCreator;
 import org.springframework.batch.item.file.builder.MultiResourceItemWriterBuilder;
+import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 @Configuration
@@ -66,9 +71,30 @@ public class BatchConfig {
     }
 
     @Bean
-    public InputProcessor processor() {
+    public InputProcessor inputProcessor() {
         return new InputProcessor();
     }
+
+//    @Bean
+//    public ItemProcessor<InputEntity, StrategyOneRequest> xmlStructureProcessor() {
+//        return inputEntity -> {
+//            StrategyOneRequest request = new StrategyOneRequest();
+//            request.setHeader(new StrategyOneRequest.Header());
+//            request.setBody(inputEntity);
+//            return request;
+//        };
+//    }
+
+//    @Bean
+//    public CompositeItemProcessor<InputEntity, StrategyOneRequest> compositeProcessor() {
+//        CompositeItemProcessor<InputEntity, StrategyOneRequest> compositeProcessor = new CompositeItemProcessor<>();
+//        compositeProcessor.setDelegates(Arrays.asList(
+//                inputProcessor(),
+//                xmlStructureProcessor()
+//        ));
+//        return compositeProcessor;
+//    }
+
 
     @Bean
     @StepScope
@@ -97,22 +123,22 @@ public class BatchConfig {
     public StaxEventItemWriter<InputEntity> xmlItemWriter(@Value("#{jobParameters['output.file.name']}") String filename) throws IOException {
         StaxEventItemWriter<InputEntity> writer = new StaxEventItemWriter<>();
         writer.setResource(new FileSystemResource(filename));
-
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
         marshaller.setClassesToBeBound(InputEntity.class);
         writer.setMarshaller(marshaller);
         writer.setRootTagName("a");
         writer.setOverwriteOutput(true);
-
         return writer;
     }
+
+
 
     @Bean
     public Step writingStep() throws IOException {
         return new StepBuilder("XmlFileWriterStep", jobRepository)
                 .<InputEntity, InputEntity>chunk(5, platformTransactionManager)
                 .reader(DataReader())
-                .processor(processor())
+                .processor(inputProcessor())
                 .writer(multiXmlItemWriter(null))
                 .build();
     }

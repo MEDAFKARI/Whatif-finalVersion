@@ -129,7 +129,7 @@ public class SshCommandExecutor {
         session.disconnect();
 
 
-//        file.delete();
+        file.delete();
 
 
 
